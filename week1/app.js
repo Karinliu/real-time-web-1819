@@ -63,5 +63,5 @@ io.on('connection', function(socket) {
     })
 });
 
-// http.listen(2000, () => console.log(`Example app listening on port ${port}!`))
-http.listen(process.env.PORT || 2000)
+http.listen(2000, () => console.log(`Example app listening on port ${port}!`))
+// http.listen(process.env.PORT || 2000)
