@@ -8,9 +8,13 @@ const app = express()
     .use(express.static('./src/css'))
     .use(express.static('./src/js'))
     .use(express.static('./src/images'))
-    .get('/', index)
+    // .get('/', index)
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 const port = 1400;
+const nicknames = [];
+const images = [];
 
 const tumblr = require('tumblr.js');
 const client = tumblr.createClient({
@@ -24,20 +28,16 @@ const client = tumblr.createClient({
 
 });
 
-
 // Make the request
 client.userInfo(function(err, data) {
-    // console.log(data)
     data.user.blogs.forEach(function(blog) {
-        // console.log(blog.name);
     });
 });
-
 
 // client.blogPosts('staff')
 //   .then(function(resp) {
 
-//   	console.log(resp.posts)
+//      console.log(resp.posts)
 //     resp.posts;
 //   })
 //   .catch(function(err) {
@@ -45,139 +45,124 @@ client.userInfo(function(err, data) {
 //   });
 
 // client.blogPosts('mochi', {type: 'photo', tag: ['cute']}, function(err, resp) {
-// 	console.log(resp.posts)
+//  console.log(resp.posts)
 //   resp.posts; // use them for something
 // });
 
 
 
 
-      // client.taggedPosts('blue',  function(err, data) {
-    //     console.log(data)
-    //     for (let i = 0; i < data.length; ++i) {
-    //         const post = data[i];
+// client.taggedPosts('blue',  function(err, data) {
+//     console.log(data)
+//     for (let i = 0; i < data.length; ++i) {
+//         const post = data[i];
 
-    //         if (post.type === 'photo') {
-    //             // console.log(post.blog.name, post.id, post.tags.join(', '));
-    //             post.image_permalink
-    //             console.log(post.image_permalink);
-    //         }
-    //     }
-    // });
+//         if (post.type === 'photo') {
+//             // console.log(post.blog.name, post.id, post.tags.join(', '));
+//             post.image_permalink
+//             console.log(post.image_permalink);
+//         }
+//     }
+// });
 // getData('')
 
-function getImage(url){
 
-    fetch("https://tumbler-of-cats.tumblr.com/image/184278406533")
-  .then(response => response.text())
-  .then(text => {
-    const parser = new DomParser();
-    const htmlDocument = parser.parseFromString(text, "text/html");
-    // document.querySelector("div").appendChild(section);
-
-    // console.log(htmlDocument)
-    // console.log(section)
-  })
-    // fetch('https://tumbler-of-cats.tumblr.com/image/184278406533')
-    // .then(function(response) {
-    //     // When the page is loaded convert it to text
-    //     return response.text()
-    // })
-    // .then(function(html) {
-    //     // Initialize the DOM parser
-    //     const parser = new DomParser();
-
-    //     const htmlDocument = parser.parseFromString(html, "text/html");
-    //     const section = htmlDocument.documentElement.querySelector("section");
-    //     // document.querySelector("div").appendChild(section);
-    //     console.log(htmlDocument);
-    //     console.log(section);
-    // })
-    // .catch(function(err) {  
-    //     console.log('Failed to fetch page: ', err);  
-    // });
-
-// async function getImage(url){
-//     const browser = await puppeteer.launch({devtools: true});
-//     const page = await browser.newPage();
-//     await page.goto('https://tumbler-of-cats.tumblr.com/image/184278406533');
-
-//     await page.click('.yes')
-//     await page.waitForNavigation({ waitUntil: 'networkidle0' })
-//     await page.waitFor(3000)
-//     const image = await page.evaluate(()=>{return document.querySelector('body')})
-//     console.log(image)
-//     // try {
-//     //     // const shizzle = await page.evaluate((test) => {
-//     //     //     console.log(test);
-//     //     //     const image = document.querySelector('body');
-//     //     //     console.log(image)
-//     //     //     return image
-//     //     // })
-//     //     // console.log(shizzle)
-//     //     const data = await fetch('http://cutecornflakes.tumblr.com/image/184269993801');
-//     //     console.log(JSON.parse(data));
-//     // } catch (err) {
-//     //     err
-//     // }
-
-//  // await browser.close();
-
-}
-getImage()
-
-function getData(value){
+function getData(value) {
     return client.taggedPosts(value)
-          .then(function(data) {
+        .then(function(data) {
             // console.log(data[0])
 
             const photo = data
-                .filter(item => item.type ==="photo")
-                .map(photo => {return {
-                    photo: photo.photos
-                    .map(ding =>
-                        console.log("wat is", ding))
-                    // photo: photo.image_permalink,
-                //     tags: photo.tags
-                }})
-            console.log(photo)
-            return data
-          })
-          .catch(function(err) {
-            // oops
-          });
-}
-
-function index(req, res, data) {
-    // res.sendFile(__dirname + '/view/pages/index.html');
-    // client.taggedPosts('blue')
-    //       .then(function(data) {
-    //         for (let i = 0; i < data.length; ++i) {
-    //                 const post = data[i];
-
-    //                 if (post.type === 'photo') {
-    //                     // console.log(post.blog.name, post.id, post.tags.join(', '));
-    //                     post.image_permalink
-    //                     console.log(post.image_permalink);
-    //                 }
-    //                 console.log("Data is " + post.image_permalink)
-    //             }
-    //             console.log("wejo data is" + data)
-    //             res.render('/pages/index', {data: data});
-    //       })
-    //       .catch(function(err) {
-    //         // oops
-    //       });
-    getData('cats')
-        .then(data=>{
-            // console.log(data[0])
-            res.render('pages/index',{data: data})
+                .filter(item => item.type === "photo")
+                .map(photo => {
+                    return {
+                        pic: photo.photos.map(picture => {
+                            return picture.original_size.url
+                        }),
+                        tags: photo.tags
+                    }
+                })
+            console.log(photo)    
+            return photo
         })
-    // res.render(' /pages/index')
-    
+        .catch(function(err) {
+            // oops
+        });
 }
 
+io.on('connection', function(socket) {
+    socket.on('hashtag', function(data, callback){
+        console.log("tagwoord is " + data)
+        const keyWord = data;
+
+    getData(keyWord)
+        .then(data => {
+            console.log("data?"+data[0].pic)
+            io.emit('all users', {data: data[0], datapic: data[0].pic, datatag: data[0].tags});
+        })
+    });
+
+    socket.on('new user', function(username, callback){
+            callback(true);
+            socket.nickname = username;
+            nicknames.push(socket.nickname);
+            console.log(nicknames)
+            io.emit('usernames', nicknames);
+
+    });
+
+    socket.on('parsedImg', function(data){
+        console.log("coming from check" + data)
+        console.log("nickname " + socket.nickname)
+        io.emit('all images', {url:data, nick: socket.nickname});
+    })
+
+    // socket.on('room', function(room, data) {
+    //     console.log("room is joined by", socket.nickname)
+    //     socket.join(room);
+    // });
 
 
 
-app.listen(1400, () => console.log(`Example app listening on port ${port}!`))
+  socket.on('chat message', function(msg){
+    io.emit('chat message', {msg:msg, nick:socket.nickname})    
+  });
+
+    socket.on('chatgroup', function(users){
+        const usersChat = []
+        usersChat.push(users);
+
+        console.log(usersChat)
+    });
+
+  socket.on('disconnect', function(msg) {
+      if (!socket.nickname) {
+          console.log("username is gone")
+      } else {
+          console.log("username is there")
+          const nicknameList = nicknames.slice(nicknames.indexOf(socket.nickname), 1)
+          console.log("listnames " + nicknameList)
+          console.log(nicknames)
+          console.log("logout " + socket.nickname)
+
+            console.log(nicknames)
+            var index = nicknames.indexOf(socket.nickname);
+            if (index > -1) {
+              nicknames.splice(socket.nickname, 1);
+          }
+            // array = [2, 9]
+            console.log(nicknames);
+
+          io.emit('user disconnected', {nick: socket.nickname })
+          io.emit('usernames', nicknames)
+      }
+
+  })
+
+});
+
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + '/view/pages/index.html');
+});
+
+http.listen(1400, () => console.log(`Example app listening on port ${port}!`))
