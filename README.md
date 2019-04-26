@@ -1,5 +1,11 @@
 # Real-Time Web @cmda-minor-web · 2018-2019
 
+### The assignment
+The assignment is to build a meaningful real-time application. The application is to setup an open connection between the client and the server. This will enable to send data in real-time both ways, at the same time.
+
+### Live server
+https://karin-rtw.herokuapp.com/
+
 ### My concept
 My concept is to let a user search for a hashtag. From these search results a random image will be displayed.
 
@@ -37,3 +43,8 @@ The real time events what is happening are:
 • Images can be merged but the user self does not know that :(
 • Images can not be downloaded.
 
+
+##### Sources
+• [Fetch data from the API](https://github.com/tumblr/tumblr.js/) <br>
+• [Combining images](https://stackoverflow.com/questions/7283065/canvas-combing-two-images-return-one-img-html-object) <br>
+• [Socket.io](https://socket.io/) <br>

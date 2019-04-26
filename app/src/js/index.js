@@ -165,7 +165,7 @@
          })
      })
 
-     var room = "example";
+    var room = "example";
 
          // socket.on('chat message', function() {});
     socket.on('user disconnected', function (data) {
