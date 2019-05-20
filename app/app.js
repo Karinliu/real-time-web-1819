@@ -8,14 +8,14 @@ const app = express()
     .use(express.static('./src/css'))
     .use(express.static('./src/js'))
     .use(express.static('./src/images'))
-    // .get('/', index)
+// .get('/', index)
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 const port = 1400;
 const nicknames = [];
 const images = [];
-
+let usersObj = []
 const tumblr = require('tumblr.js');
 const client = tumblr.createClient({
     credentials: {
@@ -30,8 +30,7 @@ const client = tumblr.createClient({
 
 // Make the request
 client.userInfo(function(err, data) {
-    data.user.blogs.forEach(function(blog) {
-    });
+    data.user.blogs.forEach(function(blog) {});
 });
 
 // client.blogPosts('staff')
@@ -82,7 +81,7 @@ function getData(value) {
                         tags: photo.tags
                     }
                 })
-            console.log(photo)    
+            // console.log(photo)    
             return photo
         })
         .catch(function(err) {
@@ -91,30 +90,150 @@ function getData(value) {
 }
 
 io.on('connection', function(socket) {
-    socket.on('hashtag', function(data, callback){
+    socket.on('hashtag', function(data, callback) {
         console.log("tagwoord is " + data)
         const keyWord = data;
 
-    getData(keyWord)
-        .then(data => {
-            console.log("data?"+data[0].pic)
-            io.emit('all users', {data: data[0], datapic: data[0].pic, datatag: data[0].tags});
+        getData(keyWord)
+            .then(data => {
+                const userObj = {
+                    data: data[0],
+                    datapic: data[0].pic,
+                    datatag: data[0].tags,
+                    socketId: socket.id,
+                    nick: socket.nickname
+                }
+                usersObj.push(userObj)
+                // console.log(usersObj)
+                // console.log("data?"+data[0].pic)
+                io.emit('all users', usersObj);
+            })
+    });
+    socket.on('make room', (id) => {
+        socket.join(socket.id)
+        // console.log(io.sockets)
+        usersObj = usersObj.map(user => {
+            if (user.socketId === socket.id) {
+                users = user
+                users.room = socket.id
+                return user
+            }
+            return user
         })
+
+        // console.log("object", usersObj)
+        io.sockets.connected[id].emit('join the room plz', socket.id)
+    })
+
+    socket.on('new user', function(username, callback) {
+        callback(true);
+        socket.nickname = username;
+        nicknames.push(socket.nickname);
+        // console.log(nicknames)
+        io.emit('usernames', nicknames);
+
     });
 
-    socket.on('new user', function(username, callback){
-            callback(true);
-            socket.nickname = username;
-            nicknames.push(socket.nickname);
-            console.log(nicknames)
-            io.emit('usernames', nicknames);
+    socket.on('accepted invite', function(socketroom) {
+        // console.log('rooom',socketroom)
+        socket.join(socketroom)
+        usersObj = usersObj.map(user => {
+            if (user.socketId === socket.id) {
+                users = user
+                users.room = socketroom
+                return user
+            }
+            return user
+        })
+        // console.log('Usersobj' ,usersObj)
+        const deleteItems = usersObj.filter(user => socketroom === user.room)
+            .map(user => user.socketId)
+        // console.log("deleted socket id", deleteItems)
+        const usersInRoom = usersObj.filter(user => {
+            return user.socketId === socketroom || user.socketId === socket.id
+        })
 
+
+        // const newArrayItems = usersObj.filter(user=>{
+        //     return user.socketId === deleteItems
+        // })
+
+        // const deleteImagesFromList = usersObj
+        //     .filter(user => {
+        //         return socketroom !== user.room})
+        //     .map(user =>{
+        //         return usersInRoom
+        //     })
+
+        // usersObj = deleteImagesFromList;   
+
+        // console.log(deleteImagesFromList);    
+        // console.log("nieuwe usersobject is",usersObj);    
+
+
+        // console.log("this users are in room", usersInRoom.socketId)
+        io.emit('delete images with this id', deleteItems)
+        console.log(usersInRoom)
+        io.to(socketroom).emit('joined room', usersInRoom, socket.nickname)
+    })
+
+    // socket.on('denied invite', function(socketroom) {
+        
+    // })
+
+    // socket.on('create', function(room) {
+    //     console.log(room + " is joined by " +  socket.nickname)
+    //     console.log("nickname is", socket.nickname)
+    //     socket.join(room);
+
+    //     console.log(io.sockets.clients('chatroom1'))
+    // });
+
+        socket.on('chat message', function(data) {
+        console.log('is dit leeg?',usersObj)
+        console.log('id is',socket.id)
+
+        const users = usersObj
+            .filter(user => {
+                // console.log(user.socketId, socket.id)
+                return user.socketId === socket.id
+            })
+            .map(user => {
+                console.log('data is', user)
+                return {
+                    nick: user.nick
+                }
+            })
+        // console.log(users)
+
+        // console.log(users[0].room)
+
+        // if(data.msg !== ""){
+
+        //     console.log('wat is al deze ',data.data)
+        //     console.log("user is", data.nick)
+        //     console.log("message is", data.msg)
+        io.to(data.data[0].room).emit('chat message', {
+            msg: data.msg,
+            nick: users[0].nick
+        })
+        // }
+
+
+
+
+        // console.log('socketid', socket.id)
+        // io.to(socketroom).emit('chat message', {msg:msg, nick:socket.nickname, id: socket.id})  
+        // io.emit('chat message', {msg:msg, nick:socket.nickname, id: socket.id})    
     });
 
-    socket.on('parsedImg', function(data){
-        console.log("coming from check" + data)
-        console.log("nickname " + socket.nickname)
-        io.emit('all images', {url:data, nick: socket.nickname});
+    socket.on('parsedImg', function(data) {
+        // console.log("coming from check" + data)
+        // console.log("nickname " + socket.nickname, "sended an image")
+        io.emit('all images', {
+            url: data,
+            nick: socket.nickname
+        });
     })
 
     // socket.on('room', function(room, data) {
@@ -122,42 +241,81 @@ io.on('connection', function(socket) {
     //     socket.join(room);
     // });
 
-
-
-  socket.on('chat message', function(msg){
-    io.emit('chat message', {msg:msg, nick:socket.nickname})    
-  });
-
-    socket.on('chatgroup', function(users){
+    socket.on('chatgroup', function(users) {
         const usersChat = []
         usersChat.push(users);
 
-        console.log(usersChat)
+        // console.log(usersChat)
     });
 
-  socket.on('disconnect', function(msg) {
-      if (!socket.nickname) {
-          console.log("username is gone")
-      } else {
-          console.log("username is there")
-          const nicknameList = nicknames.slice(nicknames.indexOf(socket.nickname), 1)
-          console.log("listnames " + nicknameList)
-          console.log(nicknames)
-          console.log("logout " + socket.nickname)
 
-            console.log(nicknames)
+    // function makeScreenshot(){
+    //     (async () => {
+    //           const browser = await puppeteer.launch();
+    //           const page = await browser.newPage();
+    //           await page.goto('http://localhost:1400/');
+    //           await page.evaluate(() => document.querySelector('#myCanvas' ).className);
+    //           await page.screenshot({path: 'example.png'});
+
+    //           await browser.close();
+    //     })();
+    // }
+
+    // socket.on('download image screen', function(){
+
+    //     makeScreenshot()
+    // })
+
+    // socket.on('delete id from list', function(idUser){
+    //     console.log("issss dit de", idUser)
+
+    //     const newArray = usersObj
+    //                     .filter(user=>{
+    //                         // console.log(user.socketId, socket.id)
+    //                         return user.socketId===idUser}
+    //                         )
+    //     console.log("what is", newArray)
+
+    //     // usersObj.push(usersInRoom)
+
+
+    // })
+
+    socket.on('disconnect', function(msg) {
+        const newArray = usersObj
+            .filter(user => {
+                // console.log(user.socketId, socket.id)
+                return user.socketId !== socket.id
+            })
+        usersObj = newArray
+
+        // console.log('Usersobj is=',usersObj)
+        io.emit('all users', usersObj)
+
+        if (!socket.nickname) {
+            // console.log("username is gone")
+        } else {
+            // console.log("username is there")
+            const nicknameList = nicknames.slice(nicknames.indexOf(socket.nickname), 1)
+            // console.log("listnames " + nicknameList)
+            // console.log(nicknames)
+            // console.log("logout " + socket.nickname)
+
+            // console.log(nicknames)
             var index = nicknames.indexOf(socket.nickname);
             if (index > -1) {
-              nicknames.splice(socket.nickname, 1);
-          }
+                nicknames.splice(socket.nickname, 1);
+            }
             // array = [2, 9]
             console.log(nicknames);
 
-          io.emit('user disconnected', {nick: socket.nickname })
-          io.emit('usernames', nicknames)
-      }
+            io.emit('user disconnected', {
+                nick: socket.nickname
+            })
+            io.emit('usernames', nicknames)
+        }
 
-  })
+    })
 
 });
 
