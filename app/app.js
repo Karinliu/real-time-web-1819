@@ -1,7 +1,8 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const fetch = require('node-fetch');
-var DomParser = require('dom-parser');
+const DomParser = require('dom-parser');
+const domtoimage = require('dom-to-image');
 const app = express()
     .set('view engine', 'ejs')
     .set('views', 'view')
@@ -70,7 +71,7 @@ function getData(value) {
     return client.taggedPosts(value)
         .then(function(data) {
             // console.log(data[0])
-
+            // console.log(data)
             const photo = data
                 .filter(item => item.type === "photo")
                 .map(photo => {
@@ -79,6 +80,7 @@ function getData(value) {
                             return picture.original_size.url
                         }),
                         tags: photo.tags
+                        // glow: ""
                     }
                 })
             // console.log(photo)    
@@ -91,11 +93,13 @@ function getData(value) {
 
 io.on('connection', function(socket) {
     socket.on('hashtag', function(data, callback) {
-        console.log("tagwoord is " + data)
+        // console.log("tagwoord is " + data)
         const keyWord = data;
 
         getData(keyWord)
             .then(data => {
+                // console.log('data is', data)
+                // console.log('data is', data.length)
                 const userObj = {
                     data: data[0],
                     datapic: data[0].pic,
@@ -107,6 +111,7 @@ io.on('connection', function(socket) {
                 // console.log(usersObj)
                 // console.log("data?"+data[0].pic)
                 io.emit('all users', usersObj);
+                // socket.emit('choose image', data)
             })
     });
     socket.on('make room', (id) => {
@@ -123,6 +128,31 @@ io.on('connection', function(socket) {
 
         // console.log("object", usersObj)
         io.sockets.connected[id].emit('join the room plz', socket.id)
+    })
+
+    socket.on('changed color', function(color){
+        console.log(socket.id)
+        const updated = usersObj.map(user=>{
+                if(user.socketId === socket.id) {
+                    user = user
+                    user.color = color
+                    return user
+                }else{
+                    return user
+                }
+            })
+        usersObj = updated
+
+        const usersInRoom = usersObj.filter(user => {
+            return user.socketId === socket.id
+        })
+
+        console.log('object room', updated[0].room)
+
+        // socket.emit('update allUsers', updated)
+        io.to(updated[0].room).emit('update mergedImages', {data: updated, color: color})
+        console.log(updated)
+
     })
 
     socket.on('new user', function(username, callback) {
@@ -199,7 +229,7 @@ io.on('connection', function(socket) {
                 return user.socketId === socket.id
             })
             .map(user => {
-                console.log('data is', user)
+                // console.log('data is', user)
                 return {
                     nick: user.nick
                 }
@@ -248,23 +278,24 @@ io.on('connection', function(socket) {
         // console.log(usersChat)
     });
 
+    socket.on('download image screen', function(){
 
-    // function makeScreenshot(){
-    //     (async () => {
-    //           const browser = await puppeteer.launch();
-    //           const page = await browser.newPage();
-    //           await page.goto('http://localhost:1400/');
-    //           await page.evaluate(() => document.querySelector('#myCanvas' ).className);
-    //           await page.screenshot({path: 'example.png'});
+        makeScreenshot()
+    })
 
-    //           await browser.close();
-    //     })();
-    // }
 
-    // socket.on('download image screen', function(){
+    function makeScreenshot(){
+        (async () => {
+              const browser = await puppeteer.launch();
+              const page = await browser.newPage();
+              await page.goto('http://localhost:1400/');
+              await page.evaluate(() => document.querySelector('#canvascontainer').className);
+              await page.screenshot({path: 'example.png'});
 
-    //     makeScreenshot()
-    // })
+              await browser.close();
+        })();
+    }
+
 
     // socket.on('delete id from list', function(idUser){
     //     console.log("issss dit de", idUser)

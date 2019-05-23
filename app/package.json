@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "dom-parser": "^0.1.6",
+    "dom-to-image": "^2.6.0",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "file-saver": "^2.0.2",

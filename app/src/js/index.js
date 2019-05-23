@@ -52,6 +52,87 @@
 
      });
 
+     socket.on('choose image', function(data){
+        console.log(data)
+
+        const filteredData = data
+            .map(item=>item.tags)
+            .reduce((acc, val) => acc.concat(val), [])
+            .filter(onlyUnique);
+
+        filteredData.forEach(tag=>{
+            const newElement = `
+            <div>
+                
+                <label for="">${tag}</label>
+                <input type="checkbox"  value="${tag}" />
+            </div
+            `
+            document.querySelector('#allTags').insertAdjacentHTML('beforeend', newElement)
+        })
+        addEventToCheckbox()
+        data.forEach(item => {
+             // console.log('Creating image')
+             let article = document.createElement("article")
+             let createImg = document.createElement("img")
+             // let createImgPara = document.createElement("p")
+                 // createImg.classList.add("transparant")
+             const imgtext = document.createTextNode('item.pic');
+             // const imgtextPTag = document.createTextNode('User: '+ item.nick);
+             createImg.src = item.pic;
+             // createImg.id = 'id' + item.socketId
+
+             // createImgPara.appendChild(imgtextPTag)
+             // console.log(createImgPara)
+             article.appendChild(createImg);
+             // article.appendChild(createImgPara);
+
+             allImages.appendChild(article)
+        })
+        chooseImage()
+     })
+     const filterValue =[]
+     function addEventToCheckbox(){
+        console.log('adding events to checkbox')
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox=>{
+            // console.log(checkbox)
+            checkbox.addEventListener('click',checkValue)
+        })
+     }
+     function checkValue(){
+        console.log('click')
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox=>{
+            if(checkbox.checked){
+                console.log(checkbox.value)
+                if(!filterValue.includes(checkbox.value)){
+                    filterValue.push(checkbox.value)
+                }
+                
+                filterList()
+            }   
+        })
+     }
+     // function filterList(){
+     //    filterValue.forEach(value => 
+     //        )
+     //    // console.log(filterValue)
+     // }
+//Helper function
+function onlyUnique(value, index, self) { 
+    return self.indexOf(value) === index;
+}
+
+          function chooseImage(){
+        const chosenimg = document.querySelectorAll('#allImages article img')
+
+        chosenimg.forEach(img =>{
+            img.addEventListener('click', function(data){
+                console.log(this.src)
+            })
+            socket.emit(    )
+        })
+        }
+
      socket.on('all users', function(data) {
          // console.log(data)
          let allImages = document.getElementById("allImages");
@@ -148,6 +229,9 @@
          allUsers.classList.add('hidden');
          contentWrap.classList.remove('hidden');
 
+         // console.log(data)
+         // contentWrap.id = data;
+
 
          //Sidebar
          data.forEach(element => {
@@ -180,6 +264,7 @@
          let newNodeImg = document.createElement("img");
          const myImgText = document.createTextNode(data[0].datapic);
          newNodeImg.src = data[0].datapic
+         newNodeImg.id = 'id'+data[0].socketId
 
          // console.log(myImgText)
 
@@ -190,6 +275,7 @@
          let newNodeImg2 = document.createElement("img");
          const myImgText2 = document.createTextNode(data[1].datapic);
          newNodeImg2.src = data[1].datapic
+         newNodeImg2.id = 'id'+data[1].socketId
 
          // console.log(myImgText2)
 
@@ -202,40 +288,165 @@
          let clone2 = newNodeImg2.cloneNode(true);
 
          imageObj1.src = clone1.src
+         clone1.crossOrigin="anonymous";
          imageObj2.src = clone2.src
+         clone2.crossOrigin="anonymous";
 
 
-         var canvas = document.getElementById('myCanvas');
-         var context = canvas.getContext('2d');
+         var canvas = document.getElementById('canvascontainer');
+         // var context = canvas.getContext('2d');
 
-         canvas.width = imageObj1.width;
-         canvas.height = imageObj1.height;
+         canvas.appendChild(clone1)
+         canvas.appendChild(clone2)
+         // canvas.width = imageObj1.width;
+         // canvas.height = imageObj1.height;
 
-         context.globalAlpha = 1.0;
-         context.drawImage(imageObj1, 0, 0);
-         context.globalAlpha = 0.5; //Remove if pngs have alpha
-         context.drawImage(imageObj2, 0, 0);
+         // context.globalAlpha = 1.0;
+         // context.drawImage(imageObj1, 0, 0);
+         // context.globalAlpha = 0.5; //Remove if pngs have alpha
+         // context.drawImage(imageObj2, 0, 0);
+
+         // canvas.toDataUrl('image/jpeg')
+         socket.emit('download image screen one', clone1.src)
+         socket.emit('download image screen two', clone2.src)
+
+     }
+
+     const buttonFilter = document.getElementById('chooseColor')
+     chooseColor.addEventListener('submit', chooseColorFilter)
+
+     function chooseColorFilter(e){
+        e.preventDefault()
+        console.log(document.getElementById('chooseColor'))
+
+        const inputRadio = document.querySelectorAll('#chooseColor input')
+
+        inputRadio.forEach(radio=>{
+            if(radio.checked){
+                console.log(radio.value)
+                const mergedImageContainer = document.getElementById('canvascontainer')
+                mergedImageContainer.classList = ""
+                mergedImageContainer.classList.add(radio.value)
+
+                socket.emit('changed color', radio.value)
+            }
+        })
+       console.log(inputRadio)
      }
 
 
-     const downloadbtn = document.querySelector('#downloadbtn')
+     socket.on('update mergedImages', function(data) {
+        console.log(data)
+            // console.log(colorUpdate)
+            // document.getElementById('canvascontainer').innerHTML=""
+            // const color = colorUpdate.forEach(color =>{
+            //     console.log(color.datapic[0])
+            //     return color.datapic[0]
 
-     downloadbtn.addEventListener("click", report);
+            // })
 
-     async function report() {
-         let screenshot = await makeScreenshot(); // png dataUrl
-         let img = document.querySelector('#myCanvas');
-         img.src = screenshot;
+            // const allImages = document.querySelectorAll('img').forEach(img =>{
+            //         if(img.src === color){
+            //             console.log("correct", color)
+            //         }
+            //     })
+        const mySection = document.querySelector(".element1")
+         let newNodeImg = document.createElement("img");
+         const myImgText = document.createTextNode(data.data[0].datapic);
+         newNodeImg.src = data.data[0].datapic
+         newNodeImg.id = 'id'+data.data[0].socketId
+         mySection.innerHTML = ""
+         mySection.classList = ""
+         mySection.classList.add(data.data[0].color, 'element1')
 
-         let c = q(".bug-container");
-         c.classList.remove('hide')
+         // console.log(myImgText)
+         mySection.appendChild(newNodeImg)
 
-         let box = await getBox();
-         c.classList.add('hide');
 
-         send(screenshot, box); // sed post request  with bug image, region and description
-         alert('To see POST requset with image go to: chrome console > network tab');
-     }
+         const otherSection = document.querySelector(".element2")
+         let newNodeImg2 = document.createElement("img");
+         const myImgText2 = document.createTextNode(data.data[1].datapic);
+         newNodeImg2.src = data.data[1].datapic
+         newNodeImg2.id = 'id'+data.data[1].socketId
+         otherSection.innerHTML = ""
+         otherSection.classList = ""
+        otherSection.classList.add(data.data[1].color, 'element2')
+
+         // console.log(myImgText2)
+
+         otherSection.appendChild(newNodeImg2);
+
+         // Merge images to canvas
+         const imageObj1 = new Image();
+         const imageObj2 = new Image();
+         let clone1 = newNodeImg.cloneNode(true);
+         let clone2 = newNodeImg2.cloneNode(true);
+
+         imageObj1.src = clone1.src
+         clone1.crossOrigin="anonymous";
+         imageObj2.src = clone2.src
+         clone2.crossOrigin="anonymous";
+
+
+         let  canvas = document.getElementById('canvascontainer');
+         canvas.innerHTML =""
+         canvas.classList = ""
+         // data.forEach(item =>{
+            canvas.classList.add(data.color)
+         // })
+
+         canvas.appendChild(clone1)
+         canvas.appendChild(clone2)
+
+                                    
+        })
+
+
+
+
+     function screenshot(){
+       // html2canvas(document.getElementById('canvascontainer'), { allowTaint: true })
+       // .then(function(canvas) {
+       //  canvas.classList.add('canvasDownload')
+       //  document.body.appendChild(canvas);
+
+       //  canvas.toDataURL('images/jpeg')
+       // });
+
+       socket.emit('download image screen')
+      }
+
+     // function report() {
+     //    const canvas = document.getElementById("myCanvas");
+     //    canvas.toDataUrl('image/jpeg')
+        // canvas.toBlob(function(blob) {
+        //     saveAs(blob, "pretty image.png");
+
+        //     console.log(blob)
+        //      canvas.toDataUrl('image/jpeg', 1.0)
+        //      console.log(canvas)
+            // socket.emit('download image screen')
+        // });
+        // var c = document.getElementById("myCanvas");
+        // var dom = document.getElementById("dom");
+        // var ctx = c.getContext("2d");
+
+        // // var imgData = ctx.getImageData(10, 10, 50, 50);
+        // //   dom.putImageData(imgData, 10, 70);
+
+        // // var canvas = document.createElement("canvas");
+        // // var ctx = canvas.getContext("2d");
+        // var img = new Image();
+        // img.crossOrigin = "anonymous";
+        // img.onload = function() {
+        //   dom.width = img.width;
+        //   dom.height = img.height;
+        //   ctx.drawImage(img, 0, 0);
+        //   originalImageData = ctx.canvas.toDataURL();
+        // }
+        // img.src = 'picture.jpeg';
+
+     // }
 
 
      socket.on('delete images with this id', function(data) {
