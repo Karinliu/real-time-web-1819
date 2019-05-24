@@ -27,7 +27,7 @@ The rate limit for the API is 1,000 requests per hour, and 5,000 requests per da
 #### Authorisation
 Tumblr supports OAuth for authentication, which is written in the NodeJS code. Because my access token is filled in, every user who is coming on my website, will be using my access token to interact with other users. Also this token is used for fetching the data from the Tumblr Api.
 
-```
+```js
 credentials: {
         consumer_key: 'hFpTEAwAQYaQB9UwzOCQ6Y5iqKgvJVgJw7xeApG6NPTWXvJlun',
         consumer_secret: '07cC4ZW0TAa9jG0JOznTbEh06gNdduJxJiOZMklWXCgCbi36QN',
@@ -39,7 +39,7 @@ credentials: {
 ##### The data what is coming from the api
 The api gives you the following data:
 
-```
+```json
 Example app listening on port 1400!
 { type,
   blog_name,
@@ -137,7 +137,7 @@ The usernames will be saved in an object and the hashtag will be used for gettin
 *Get image with #hashtag*
 The hashtag is sended to the server. And with the following function the data will be received from the API. <br>
 
-```
+```js
 function getData(value) {
     return client.taggedPosts(value)
         .then(function(data) {
@@ -166,7 +166,7 @@ Namely: <br>
 
 When the correct data is received from the API, the data will be pushed and saved to an empty object where I will save this data.
 
-```
+```js
 socket.on('hashtag', function(data, callback) {
         const keyWord = data;
 
@@ -195,7 +195,7 @@ When multiple users are on this page, they can ask you to join a room. <br>
 <img width="1280" alt="Screenshot 2019-05-24 01 42 23" src="https://user-images.githubusercontent.com/32538678/58293288-2f790380-7dc5-11e9-9590-efcc37de3ddb.png">
 
 Every user get his own id when they submit their username and hashtag. With their id, you can easily create a room with the following code:
-```
+```js
     socket.on('make room', (id) => {
         socket.join(socket.id)
         usersObj = usersObj.map(user => {
@@ -217,7 +217,7 @@ When the user accepted the invite, they can join the created room with their id 
 <img width="1280" alt="Screenshot 2019-05-24 01 50 32" src="https://user-images.githubusercontent.com/32538678/58293585-613e9a00-7dc6-11e9-86af-5111530b9e61.png">
 
 After both users joined the room together. They can chat with each other.
-```
+```js
 form.addEventListener("submit", function(e) {
              e.preventDefault();
 
