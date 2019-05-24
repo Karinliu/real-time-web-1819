@@ -275,6 +275,9 @@ The changes and chats from every user will be emit from the client side to the s
 
 <img width="1280" alt="Screenshot 2019-05-24 01 51 59" src="https://user-images.githubusercontent.com/32538678/58293690-d4e0a700-7dc6-11e9-811c-06a0eb794296.png">
 
+##### No rights
+With my application I wanted to give the user the possibility to download the merged images and save it into a database. But the problem is that when the images are merged together in a canvas, the canvas is not allowed to export the images. Because of user rights.
+
 
 ### Installing
 ```
