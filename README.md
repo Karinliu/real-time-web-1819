@@ -100,9 +100,9 @@ The data what I am using for my application: <br>
 <details><summary>First version</summary>
 <p>
 
-```
+
 ![datalifecycle-01](https://user-images.githubusercontent.com/32538678/56769286-0eff5e80-67b1-11e9-99c0-103ef0e86d89.png)
-```
+
 
 </p>
 </details>
@@ -110,12 +110,12 @@ The data what I am using for my application: <br>
 <details><summary>Second version</summary>
 <p>
 
-```
+
 ![test-03](https://user-images.githubusercontent.com/32538678/58292661-6f8ab700-7dc2-11e9-96e8-7750c2001b03.png)
 
 ![test-04](https://user-images.githubusercontent.com/32538678/58292660-6ef22080-7dc2-11e9-93ad-e55af0479ada.png)
 
-```
+
 
 </p>
 </details>
